@@ -98,7 +98,7 @@ def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_d
     rng = np.random.RandomState(4321)
 
     # load the data
-    datasets = utilities.load_data("../data/train_skies_grid.npz", train_size, valid_size)
+    datasets = utilities.load_data("data/train_skies_grid.npz", train_size, valid_size)
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
