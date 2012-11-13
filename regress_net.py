@@ -86,25 +86,19 @@ class RegressNetWithDropoutPredict(RegressConvNet):
 
 
 
-def train_regress_net():
+def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_decay=0.9, learning_rate=0.7, filter_size=10, n_hidden=500):
     # theano.config.compute_test_value = 'warn'
     theano.config.DebugMode.check_strides = 0
 
 
     # initialize some stuff
     # probably eventually want to un-hard-code this
-    train_size=200
-    valid_size=60
-    filter_size = 10
     nbins_out = 6
-    n_hidden = 500
     batch_size=4*train_size
-    learning_rate = 0.9
-    learning_rate_scale = .7
     rng = np.random.RandomState(4321)
 
     # load the data
-    datasets = utilities.load_data("/home/nic/DM/data/train_skies_grid.npz", train_size, valid_size)
+    datasets = utilities.load_data("../data/train_skies_grid.npz", train_size, valid_size)
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
@@ -144,8 +138,8 @@ def train_regress_net():
     momentum = {}
     for p, g in zip(cls.params, grads):
         momentum[p] = theano.shared(np.zeros_like(p.get_value()))
-        updates[p] = p+learning_rate_scale*(learning_rate*momentum[p]-(1-learning_rate)*g)
-        updates[momentum[p]] = learning_rate_scale*(learning_rate*momentum[p]-(1-learning_rate)*g)
+        updates[p] = p+learning_rate*(momentum_decay*momentum[p]-(1-momentum_decay)*g)
+        updates[momentum[p]] = learning_rate*(momentum_decay*momentum[p]-(1-momentum_decay)*g)
 
     # compile the training function in theano
     train_model_debug = theano.function(inputs=[],
