@@ -86,7 +86,7 @@ class RegressNetWithDropoutPredict(RegressConvNet):
 
 
 
-def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_decay=0.9, learning_rate=0.7, filter_size=10, n_hidden=500):
+def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_decay=0.9, learning_rate=0.7, filter_size=10, n_hidden=500, plot=False):
     # theano.config.compute_test_value = 'warn'
     theano.config.DebugMode.check_strides = 0
 
@@ -176,7 +176,7 @@ def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_d
     print "Training"
     val_score = []
     train_score = []
-    for i in xrange(10000):
+    for i in xrange(iterations):
         if i%100 == 0:
             # check the score on the validation set every 100 epochs
             # note that this returns the cost *without* the L1 penalty
@@ -196,8 +196,9 @@ def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_d
     # save the model parameters
     cls.save_params("test_weights_regress.npy")
 
-    plt.figure()
-    plt.plot(val_score)
-    plt.plot(train_score)
-    plt.legend(["Validation Cost", "Training Cost"])
-    plt.show()
+    if plot:
+        plt.figure()
+        plt.plot(val_score)
+        plt.plot(train_score)
+        plt.legend(["Validation Cost", "Training Cost"])
+        plt.show()
