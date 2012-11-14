@@ -53,8 +53,8 @@ class RegressConvNet(object):
 class RegressNetWithDropoutTrain(RegressConvNet):
     def __init__(self, input, rng, input_shape, filter_shape, n_hidden, n_out, l1_penalty):
         self.rng = T.shared_randomstreams.RandomStreams(seed=123456)
-        self.conv_mask = self.rng.binomial(size=(input_shape[0], filter_shape[0]*(input_shape[3]-filter_shape[3]+1)**2), n=1, p=0.5)
-        self.hidden_mask = self.rng.binomial(size=(input_shape[0], n_hidden), n=1, p=0.5)
+        self.conv_mask = T.cast(self.rng.binomial(size=(input_shape[0], filter_shape[0]*(input_shape[3]-filter_shape[3]+1)**2), n=1, p=0.5), theano.config.floatX)
+        self.hidden_mask = T.cast(self.rng.binomial(size=(input_shape[0], n_hidden), n=1, p=0.5), theano.config.floatX)
         self.l1_penalty = l1_penalty
 
         self.conv_layer = layers.ConvLayer(input, rng, image_shape=input_shape, filter_shape=filter_shape)
@@ -137,7 +137,7 @@ def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_d
     updates = {}
     momentum = {}
     for p, g in zip(cls.params, grads):
-        momentum[p] = theano.shared(np.zeros_like(p.get_value()))
+        momentum[p] = theano.shared(np.zeros_like(p.get_value(), dtype=theano.config.floatX))
         updates[p] = p+learning_rate*(momentum_decay*momentum[p]-(1-momentum_decay)*g)
         updates[momentum[p]] = learning_rate*(momentum_decay*momentum[p]-(1-momentum_decay)*g)
 
