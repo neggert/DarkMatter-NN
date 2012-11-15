@@ -9,6 +9,7 @@ import copy
 import layers
 reload(layers)
 import utilities
+reload(utilities)
 
 import matplotlib.pyplot as plt
 
@@ -92,13 +93,12 @@ def train_regress_net(train_size=200, valid_size=60, iterations=1000, momentum_d
 
 
     # initialize some stuff
-    # probably eventually want to un-hard-code this
     nbins_out = 6
-    batch_size=4*train_size
+    batch_size=2*train_size
     rng = np.random.RandomState(4321)
 
     # load the data
-    datasets = utilities.load_data("data/train_skies_grid.npz", train_size, valid_size)
+    datasets = utilities.load_data("data/train_skies_grid.npz", train_size, valid_size, flip=True, rotate=False)
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]

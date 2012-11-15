@@ -33,7 +33,7 @@ def shared_dataset(x, y, borrow=True):
     return shared_x, shared_y
 
 
-def load_data(dataset, train_size=200, valid_size=50):
+def load_data(dataset, train_size=200, valid_size=50, rotate=True, flip=True):
 
     datafile = np.load(dataset)
     data = datafile['output']
@@ -58,9 +58,15 @@ def load_data(dataset, train_size=200, valid_size=50):
     # add rotated versions to the training data
     td_orig = copy.copy(train_data)
     tt_orig = copy.copy(train_targets)
-    for ang in (90.,180.,270.):
-        train_data = np.append(train_data, rotate_data(td_orig, ang), axis=0)
-        train_targets = np.append(train_targets, rotate_targets(tt_orig, ang), axis=0)
+
+    if flip:
+        train_data = np.append(train_data, flip_data_x(td_orig), axis=0)
+        train_targets = np.append(train_targets, flip_targets_x(tt_orig), axis=0)
+
+    if rotate:
+        for ang in (90.,180.,270.):
+            train_data = np.append(train_data, rotate_data(td_orig, ang), axis=0)
+            train_targets = np.append(train_targets, rotate_targets(tt_orig, ang), axis=0)
 
     test_set_x, test_set_y = shared_dataset(test_data, test_targets)
     valid_set_x, valid_set_y = shared_dataset(valid_data, valid_targets)
@@ -98,4 +104,17 @@ def rotate_targets(x, angle):
     out[out==4200] = 0.
 
     return out
+
+def flip_data_x(data):
+    out = data[:,:,::-1,:]
+    out[:,2,:,:] *= -1 # only e2 changes sign
+    return out
+
+def flip_targets_x(targs):
+    out = targs.copy()
+    out -= 2100 # center
+    out[:,0::2] *= -1 # flip x
+    out += 2100 # move back so corner is at 0
+    return out
+
 
