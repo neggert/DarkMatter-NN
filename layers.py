@@ -5,7 +5,6 @@ import gzip
 import cPickle
 import os
 import copy
-from pandas import *
 
 class SoftmaxLayer(object):
     def __init__(self, input, n_in, n_out):
