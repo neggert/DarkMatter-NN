@@ -63,6 +63,9 @@ def load_data(dataset, train_size=200, valid_size=50, rotate=True, flip=True):
         train_data = np.append(train_data, flip_data_x(td_orig), axis=0)
         train_targets = np.append(train_targets, flip_targets_x(tt_orig), axis=0)
 
+    td_orig = copy.copy(train_data)
+    tt_orig = copy.copy(train_targets)
+
     if rotate:
         for ang in (90.,180.,270.):
             train_data = np.append(train_data, rotate_data(td_orig, ang), axis=0)
@@ -75,6 +78,14 @@ def load_data(dataset, train_size=200, valid_size=50, rotate=True, flip=True):
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
     return rval
+
+def load_test(dataset):
+
+    datafile = np.load(dataset)
+    data = datafile['output']
+    skies = datafile['sky_name']
+
+    return [data, skies]
 
 def rotate_data(x, angle):
     if int(angle) not in (90,180,-90, 270):
@@ -115,6 +126,7 @@ def flip_targets_x(targs):
     out -= 2100 # center
     out[:,0::2] *= -1 # flip x
     out += 2100 # move back so corner is at 0
+    out[out==4200] = 0.
     return out
 
 
