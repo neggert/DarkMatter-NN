@@ -13,7 +13,8 @@ class SoftmaxLayer(object):
         self.b = theano.shared(np.zeros((n_out,), dtype=theano.config.floatX),
                                name='b_sm', borrow=True)
 
-        self.output = T.nnet.softmax(T.dot(input, self.W)+self.b)
+        self.z = T.dot(input, self.W)+self.b
+        self.output = T.nnet.softmax(self.z)
 
         self.pred = T.argmax(self.output, axis=1)
 
@@ -54,24 +55,24 @@ class LogisticLayer(object):
 class RectifiedLinearLayer(object):
     def __init__(self, input, rng, n_in, n_out):
         W_values = np.asarray(rng.uniform(
-        low=-1./n_in,
-        high=1./n_in,
+        low=-1000.,
+        high=1000.,
         size=(n_in, n_out)), dtype=theano.config.floatX)
         self.W = theano.shared(W_values,
                                name='W_linear', borrow=True)
-        self.b = theano.shared(np.zeros((n_out,), dtype=theano.config.floatX),
-                               name='b_linear', borrow=True)
-        z = T.dot(input, self.W)+self.b
+        # self.b = theano.shared(np.asarray([2200, 2220, 1100, 1100, 700,700], dtype=theano.config.floatX),
+        #                        name='b_linear', borrow=True)
+        z = T.dot(input, self.W)#+self.b
         self.output = z
 
-        self.params = [self.W, self.b]
+        self.params = [self.W,]# self.b]
 
     def sq_error(self, t):
         return T.mean((t-self.output)**2)
 
     def copy_params(self, other_layer):
         self.W.set_value(other_layer.W.get_value())
-        self.b.set_value(other_layer.b.get_value())
+        # self.b.set_value(other_layer.b.get_value())
 
 class ConvLayer(object):
 
@@ -136,16 +137,21 @@ class SmoothingLayer(object):
         self.dx = theano.shared(dx_np.astype(theano.config.floatX), name='x_coord', borrow=True)
         self.dy = theano.shared(dy_np.astype(theano.config.floatX), name='y_coord', borrow=True)
 
+        self.norm = np.asarray(np.sqrt(2*np.pi*self.sigma**2), dtype=theano.config.floatX)
+
 
     def predict(self, x,y):
+        return T.sum(self.input/self.norm*self.gauss_arg(x,y), axis=(1,2))
+
+    def gauss_arg(self, x, y):
         x0 = self.dx.dimshuffle('x', 0, 1)
         y0 = self.dy.dimshuffle('x', 0, 1)
-        return T.sum(self.input/np.sqrt(2*np.pi*self.sigma**2)*T.exp(-(T.sub(x0,x.dimshuffle(0,'x','x'))**2+T.sub(y0,y.dimshuffle(0,'x','x'))**2)/2/self.sigma), axis=(1,2))
+        return ((x0 - x.dimshuffle(0,'x','x'))**2+(y0-y.dimshuffle(0,'x','x'))**2)/2/self.sigma**2
 
     def nll(self, t):
         eps = 1e-6
-        return -T.mean(T.log(self.predict(t[:,0],t[:,1]))
-                       # + T.log(self.predict(t[:,2],t[:,3]))#*(t[:,2]>eps) # contribution is 0 for rows where x = 0
-                       # + T.log(self.predict(t[:,4],t[:,5]))#*(t[:,4]>eps)
+        return -T.sum(T.log(self.predict(t[:,0], t[:,1]))
+                       + T.log(self.predict(t[:,2],t[:,3]))*(t[:,2]>eps) # contribution is 0 for rows where x = 0
+                       + T.log(self.predict(t[:,4],t[:,5]))*(t[:,4]>eps)
                       )
 
